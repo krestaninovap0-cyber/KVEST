@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ГЛЭТЧ — Охота на дипфейк | Верховный Совет Кода</title>
+    <title>РАЗРЫВ — Охота на дипфейк | Верховный Совет Кода</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -40,27 +40,37 @@
         .spirit-bg.shadow { background-image: url('тень.png'); }
         .spirit-bg.time { background-image: url('плетущий_время.png'); }
         .spirit-bg.chaos { background-image: url('хаос.png'); }
-        .spirit-bg.final { background-image: url('все_герои.jpg'); background-size: 50% auto; background-position: center; }
+
+        /* ФОН ФИНАЛА — НА ВЕСЬ ЭКРАН */
+        .spirit-bg.final {
+            background-image: url('все_герои.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+
+        /* ФОН ХРАНИТЕЛЯ ДЛЯ ПРОЛОГА */
+        .prolog-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background-image: url('хранитель.png');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            opacity: 0.2;
+            transition: opacity 0.5s ease;
+        }
+        .prolog-bg.hidden {
+            opacity: 0;
+        }
 
         .keeper-glitch {
-            position: fixed; bottom: 275px; right: 550px; z-index: 1000; width: 110px; cursor: pointer;
-            opacity: 0.65; filter: grayscale(100%) contrast(120%) brightness(0.8);
-            border-radius: 8px; border: 1px solid #ff3333; transition: all 0.2s ease;
-        }
-        .keeper-glitch::before, .keeper-glitch::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: inherit; border-radius: inherit; pointer-events: none;
-        }
-        .keeper-glitch::before { background: rgba(255, 0, 0, 0.3); mix-blend-mode: screen; transform: translate(4px, 0); filter: blur(1px); }
-        .keeper-glitch::after { background: rgba(0, 255, 255, 0.2); mix-blend-mode: screen; transform: translate(-4px, 0); filter: blur(1px); }
-        .keeper-glitch:hover { opacity: 1; filter: grayscale(50%) contrast(150%); transform: skewX(-2deg) scale(1.05); border-color: #ff6666; box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
-        .glitch-attack { animation: glitchPulse 0.3s infinite; }
-        @keyframes glitchPulse {
-            0% { transform: translate(0, 0); filter: grayscale(100%); opacity: 0.65; }
-            25% { transform: translate(-3px, 1px); filter: grayscale(80%) contrast(150%); opacity: 0.8; }
-            50% { transform: translate(3px, -1px); filter: grayscale(100%); opacity: 0.65; }
-            75% { transform: translate(-1px, 2px); filter: grayscale(90%) contrast(130%); opacity: 0.8; }
-            100% { transform: translate(0, 0); filter: grayscale(100%); opacity: 0.65; }
+            display: none;
         }
 
         .terminal {
@@ -76,7 +86,7 @@
         .visual-zone { background: rgba(26, 5, 5, 0.9); border: 1px dashed #ff2e2e; border-radius: 20px; padding: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
         .media-card { background: #1a0e0e; border-radius: 16px; padding: 0.8rem; text-align: center; max-width: 300px; border: 1px solid #ff3e3e; }
         .media-card p { margin-bottom: 0.6rem; color: #ffaaaa; font-weight: bold; font-size: 0.85rem; }
-        video { max-width: 100%; max-height: 200px; border-radius: 12px; border: 1px solid #ff1e1e; background: #000; }
+        video, audio, img { max-width: 100%; max-height: 200px; border-radius: 12px; border: 1px solid #ff1e1e; background: #000; }
         .input-area { display: flex; gap: 0.8rem; align-items: baseline; flex-wrap: wrap; margin-top: 0.5rem; }
         input { background: #1a0e0e; border: 1px solid #ff2e2e; color: #ffbebe; font-family: monospace; font-size: 1rem; padding: 6px 12px; border-radius: 40px; width: 200px; outline: none; }
         button { background: #2a1a1a; border: 1px solid #ff3333; color: #ffcccc; font-family: monospace; font-weight: bold; padding: 6px 18px; border-radius: 60px; cursor: pointer; }
@@ -89,11 +99,13 @@
     </style>
 </head>
 <body>
+
+<!-- ФОН ХРАНИТЕЛЯ ДЛЯ ПРОЛОГА -->
+<div id="prologBg" class="prolog-bg"></div>
+
+<!-- ОСНОВНЫЙ ФОН ДЛЯ ИГРЫ -->
 <div id="spiritBg" class="spirit-bg duh"></div>
-<div class="keeper-glitch" id="keeperGlitch">
-    <img src="хранитель.png" alt="Хранитель Кода Кодекс" style="width:330%; display:block; border-radius:8px;"
-         onerror="this.parentElement.style.opacity='0.5'; this.parentElement.style.border='1px solid red'; this.alt='⚠️ хранитель.png не найден'">
-</div>
+
 <div class="terminal">
     <div class="screen">
         <div class="log" id="log"></div>
@@ -114,7 +126,7 @@
     const prologLines = [
         "> ИНИЦИАЛИЗАЦИЯ...", "> ТЫ — ХРАНИТЕЛЬ КОДА.", "> КОРРУПЦИЯ СОЗДАЁТ ДИПФЕЙКИ.", "> МИР РАСПАДАЕТСЯ.",
         "> ТВОЯ МИССИЯ: ЗАКРЫТЬ 6 РАЗРЫВОВ.", "> ОСВОБОДИ ПАВШИХ ГЕРОЕВ.", "> СОБЕРИ ВЕРХОВНЫЙ СОВЕТ.", "> УНИЧТОЖЬ КОРРУПЦИЮ.",
-        "", "> Я — ХРАНИТЕЛЬ КОДА. МОЙ ОБРАЗ ИСКАЖЁН СИСТЕМОЙ.", "> НО Я ВСЁ ЕЩЁ ВИЖУ ПРАВДУ.", "", "> ГОТОВ? [НАЖМИ КНОПКУ «НАЧАТЬ»]"
+        "", "> Я — ХРАНИТЕЛЬ КОДА.", "", "> ГОТОВ? [НАЖМИ КНОПКУ «НАЧАТЬ»]"
     ];
 
     function createVideoElement(videoName) {
@@ -127,55 +139,100 @@
             source.type = `video/${format}`;
             video.appendChild(source);
         });
-        video.appendChild(document.createTextNode('Ваш браузер не поддерживает тег video'));
         video.onerror = () => {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-msg';
-            errorDiv.innerText = `⚠️ Не найден: ${videoName}.mp4, ${videoName}.webm, ${videoName}.mov, ${videoName}.ogg`;
+            errorDiv.innerText = `⚠️ Не найден: ${videoName}.mp4`;
             video.parentElement.appendChild(errorDiv);
         };
         return video;
     }
 
+    function createAudioElement(audioName) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.style.maxWidth = "260px";
+        ['mp3', 'wav', 'ogg'].forEach(format => {
+            const source = document.createElement('source');
+            source.src = `${audioName}.${format}`;
+            source.type = `audio/${format}`;
+            audio.appendChild(source);
+        });
+        audio.onerror = () => {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-msg';
+            errorDiv.innerText = `⚠️ Не найден: ${audioName}.mp3`;
+            audio.parentElement.appendChild(errorDiv);
+        };
+        return audio;
+    }
+
+    function createImageElement(imageName) {
+        const img = document.createElement('img');
+        img.style.maxWidth = "260px";
+        img.src = `${imageName}.png`;
+        img.onerror = () => {
+            img.src = `${imageName}.jpg`;
+            img.onerror = () => {
+                img.style.border = '2px solid red';
+                img.alt = `⚠️ ${imageName}.png/jpg не найден`;
+            };
+        };
+        return img;
+    }
+
     const stages = [
-        { // 1 ДУХ
+        {
             hero: "ДУХ", heroKey: "duh",
             theoryText: `Дух: «Нейросети научились рисовать идеально. Слишком идеально. У реального лица есть поры, морщинки, неровности. У нейросети — пластиковая гладкость. Посмотри на два видео и выбери, где лицо создал ИИ.»`,
             theoryAnswer: null, theoryIsInfo: true,
             visualType: "video",
-            visualPrompt: `Дух: «Какое видео создала нейросеть? У реального человека кожа имеет текстуру, у нейросети — неестественно гладкая.»`,
-            media: [ { name: "видео2", label: "ВИДЕО А", correct: false }, { name: "видео1", label: "ВИДЕО Б", correct: true } ],
+            visualPrompt: `Дух: «Какое видео создала нейросеть?»`,
+            media: [
+                { type: "video", name: "видео2", label: "ВИДЕО А", correct: false },
+                { type: "video", name: "видео1", label: "ВИДЕО Б", correct: true }
+            ],
             visualAnswerKey: "Б", councilAdd: "ДУХ"
         },
-        { // 2 ГРОМ
+        {
             hero: "ГРОМ", heroKey: "grom",
-            theoryText: `Гром: «У реальной записи динамический диапазон (разница между самым громким и самым тихим звуком) составляет около 60 дБ. Нейросети сжимают диапазон до 30–40 дБ.\n\nВот данные двух видео:\nВИДЕО А: самый громкий = -12 дБ, самый тихий = -68 дБ\nВИДЕО Б: самый громкий = -15 дБ, самый тихий = -50 дБ\n\nРассчитай динамический диапазон для каждого видео по формуле: Диапазон = (самый громкий) − (самый тихий)\n\nУ какого видео диапазон ближе к 35 дБ? Это нейросеть. Введи А или Б.»`,
-            theoryAnswer: "Б", theoryIsInfo: false,
-            visualPrompt: `Гром: «Видео Б: 35 дБ — диапазон нейросети.»`,
-            councilAdd: "ГРОМ"
+            theoryText: `Гром: «Реальная запись всегда содержит микро-шумы (дыхание, шорох, фоновый гул). Нейросеть очищает звук до стерильной чистоты. Послушай два аудио и выбери, где звук слишком идеальный.»`,
+            theoryAnswer: null, theoryIsInfo: true,
+            visualType: "audio",
+            visualPrompt: `Гром: «Какое аудио создала нейросеть? У реальной записи есть шумы, у нейросети — неестественно чистый звук.»`,
+            media: [
+                { type: "audio", name: "нейросеть_звук", label: "АУДИО А", correct: true },
+                { type: "audio", name: "реальный_звук", label: "АУДИО Б", correct: false }
+            ],
+            visualAnswerKey: "А", councilAdd: "ГРОМ"
         },
-        { // 3 ХРОМ
+        {
             hero: "ХРОМ", heroKey: "chrom",
-            theoryText: `Хром: «Я измерил цветовые каналы кожи (0–255).\n\nВИДЕО А: красный = 240, зелёный = 210, синий = 180\nВИДЕО Б: красный = 245, зелёный = 200, синий = 155\n\nРассчитай цветовую температуру по формуле: Температура = (Красный × 0,3 + Зелёный × 0,6 + Синий × 0,1) × 10\n\nКакое видео имеет температуру ниже 3000K? Оно подозрительное. Введи А или Б.»`,
-            theoryAnswer: "Б", theoryIsInfo: false,
-            visualPrompt: `Хром: «Видео Б: 2090K — температура нейросети.»`,
-            councilAdd: "ХРОМ"
+            theoryText: `Хром: «Нейросети часто создают лица с неестественной, "пластиковой" кожей — нет пор, морщин, неровностей. Посмотри на два фото и выбери, где лицо создал ИИ.»`,
+            theoryAnswer: null, theoryIsInfo: true,
+            visualType: "image",
+            visualPrompt: `Хром: «Какое фото создала нейросеть?»`,
+            media: [
+                { type: "image", name: "реальное_лицо", label: "ФОТО А", correct: false },
+                { type: "image", name: "нейросеть_лицо", label: "ФОТО Б", correct: true }
+            ],
+            visualAnswerKey: "Б", councilAdd: "ХРОМ"
         },
-        { // 4 ТЕНЬ
+        {
             hero: "ТЕНЬ", heroKey: "shadow",
             theoryText: `Тень: «Я измерил яркость четырёх пикселей.\n\nВИДЕО А: [120, 122, 121, 119]\nВИДЕО Б: [100, 150, 130, 160]\n\nРассчитай среднее арифметическое для каждого видео. Затем найди разность между максимальным и минимальным значением (разброс).\n\nУ нейросети разброс выше как минимум в 10 раз. Какое видео создал ИИ? Введи А или Б.»`,
             theoryAnswer: "Б", theoryIsInfo: false,
             visualPrompt: `Тень: «Видео Б: разброс 60 — нейросеть.»`,
             councilAdd: "ТЕНЬ"
         },
-        { // 5 ПЛЕТУЩИЙ ВРЕМЯ
+        {
             hero: "ПЛЕТУЩИЙ ВРЕМЯ", heroKey: "time",
             theoryText: `Плетущий время: «Я записал время между морганиями в секундах.\n\nВИДЕО А: [4.2, 3.8, 4.5, 3.9, 12.1]\nВИДЕО Б: [3.5, 4.1, 3.9, 4.3, 3.7]\n\nРассчитай среднее время между морганиями для каждого видео.\n\nЕсли в последовательности есть аномальное значение (отличается от остальных в 2+ раза), это нейросеть. Какое видео создал ИИ? Введи А или Б.»`,
             theoryAnswer: "А", theoryIsInfo: false,
             visualPrompt: `Плетущий время: «Видео А: аномалия 12.1 сек — нейросеть.»`,
             councilAdd: "ПЛЕТУЩИЙ ВРЕМЯ"
         },
-        { // 6 ХАОС (проценты)
+        {
             hero: "ХАОС", heroKey: "chaos",
             theoryText: `Хаос: «Оригинал 50 МБ, подделка 30 МБ. На сколько процентов подделка меньше? Введи число (без знака %).»`,
             theoryAnswer: "40", theoryIsInfo: false,
@@ -187,14 +244,19 @@
     const finalStage = {
         visualType: "video",
         visualPrompt: "ВЕРХОВНЫЙ СОВЕТ: «Коррупция атакует. Три видео. Среди них могут быть дипфейки. А может, и все три. Твоя задача — понять, сколько фейков перед тобой. Если считаешь, что все три созданы нейросетью — введи слово ВСЕ.»",
-        media: [ { name: "футбол", label: "ВИДЕО 1", correct: true }, { name: "кот", label: "ВИДЕО 2", correct: true }, { name: "девушка", label: "ВИДЕО 3", correct: true } ],
+        media: [
+            { type: "video", name: "футбол", label: "ВИДЕО 1", correct: true },
+            { type: "video", name: "кот", label: "ВИДЕО 2", correct: true },
+            { type: "video", name: "девушка", label: "ВИДЕО 3", correct: true }
+        ],
         visualAnswerKey: "ВСЕ"
     };
 
     let gameState = "prolog", currentStep = 0, subPhase = "theory", council = [], waitingForVisualAnswer = false, currentVisualPayload = null;
     const logDiv = document.getElementById('log'), visualBlock = document.getElementById('visualBlock'), inputArea = document.getElementById('inputArea');
     const answerInput = document.getElementById('answerInput'), submitBtn = document.getElementById('submitBtn'), councilListSpan = document.getElementById('councilList');
-    const keeperGlitch = document.getElementById('keeperGlitch'), spiritBg = document.getElementById('spiritBg');
+    const spiritBg = document.getElementById('spiritBg');
+    const prologBg = document.getElementById('prologBg');
 
     function changeBackground(heroKey) { if (!spiritBg) return; spiritBg.classList.remove('duh', 'grom', 'chrom', 'shadow', 'time', 'chaos', 'final'); spiritBg.classList.add(heroKey); }
     function addLogLine(text, isGlitch = false, isBoldRed = false, isLevelStart = false) {
@@ -206,9 +268,10 @@
         lineDiv.innerHTML = text; logDiv.appendChild(lineDiv); logDiv.scrollTop = logDiv.scrollHeight;
     }
     function updateCouncilUI() { councilListSpan.innerText = council.length === 0 ? "[ ]" : "[ " + council.join(" + ") + " ]"; }
-    function triggerGlitchAttack() { if (keeperGlitch) { keeperGlitch.classList.add('glitch-attack'); setTimeout(() => keeperGlitch.classList.remove('glitch-attack'), 500); } }
+    
     function renderVisual(visualData) {
-        visualBlock.innerHTML = ""; visualBlock.classList.remove("hidden");
+        visualBlock.innerHTML = "";
+        visualBlock.classList.remove("hidden");
         const promptDiv = document.createElement('div'); promptDiv.className = "glitch-text"; promptDiv.style.marginBottom = "15px";
         promptDiv.innerText = visualData.visualPrompt; visualBlock.appendChild(promptDiv);
         if (visualData.media && visualData.media.length > 0) {
@@ -218,35 +281,53 @@
                 const card = document.createElement('div'); card.className = "media-card";
                 const letter = idx === 0 ? "А" : (idx === 1 ? "Б" : "В");
                 card.innerHTML = `<p>${letter} — ${med.label}</p>`;
-                card.appendChild(createVideoElement(med.name)); mediaContainer.appendChild(card);
+                if (med.type === "video") card.appendChild(createVideoElement(med.name));
+                else if (med.type === "audio") card.appendChild(createAudioElement(med.name));
+                else if (med.type === "image") card.appendChild(createImageElement(med.name));
+                mediaContainer.appendChild(card);
             });
             visualBlock.appendChild(mediaContainer);
         }
     }
+
     function finishGame() {
-        gameState = "finished"; addLogLine("\n✨✨✨ ПОБЕДА ✨✨✨", true);
-        addLogLine("Коррупция повержена!", true); addLogLine("Верховный Совет: «ТЫ — ЛЕГЕНДА КОДА. НАВЕЧНО.»", true);
+        gameState = "finished";
+        addLogLine("\n✨✨✨ ПОБЕДА ✨✨✨", true);
+        addLogLine("Коррупция повержена!", true);
+        addLogLine("Верховный Совет: «ТЫ — ЛЕГЕНДА КОДА. НАВЕЧНО.»", true);
         answerInput.disabled = true; submitBtn.disabled = true; visualBlock.classList.add('hidden');
     }
+    
     function startFinalBattle() {
         subPhase = "visual"; waitingForVisualAnswer = true; currentVisualPayload = finalStage; renderVisual(finalStage);
         changeBackground('final');
         addLogLine("\n██████████ ФИНАЛЬНАЯ БИТВА С КОРРУПЦИЕЙ ██████████", true);
-        addLogLine(finalStage.visualPrompt, true); addLogLine(`> ВВЕДИ ОТВЕТ:`);
+        addLogLine(finalStage.visualPrompt, true);
+        addLogLine(`> ВВЕДИ ОТВЕТ:`);
     }
+    
     function processTheoryAnswer(answer) {
         const stage = stages[currentStep];
         if (stage.theoryIsInfo) {
             if (stage.media && stage.media.length > 0) {
-                subPhase = "visual"; waitingForVisualAnswer = true; currentVisualPayload = stage; renderVisual(stage);
-                addLogLine(`\n${stage.visualPrompt}`, true); addLogLine(`> ВВЕДИ БУКВУ (А или Б)`);
+                // Визуал уже показан, ждём ответа
             } else {
                 addLogLine(`\n${stage.visualPrompt}`, true);
                 if (!council.includes(stage.councilAdd)) { council.push(stage.councilAdd); updateCouncilUI(); }
                 if (currentStep + 1 < stages.length) {
                     currentStep++; subPhase = "theory"; const nextStage = stages[currentStep]; changeBackground(nextStage.heroKey);
                     addLogLine(`\n>>> РАЗРЫВ: УРОВЕНЬ ${nextStage.hero} <<<`, false, false, true);
-                    addLogLine(nextStage.theoryText); addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+                    addLogLine(nextStage.theoryText);
+                    if (nextStage.media && nextStage.media.length > 0) {
+                        subPhase = "visual";
+                        waitingForVisualAnswer = true;
+                        currentVisualPayload = nextStage;
+                        renderVisual(nextStage);
+                        addLogLine(`\n${nextStage.visualPrompt}`, true);
+                        addLogLine(`> ВВЕДИ БУКВУ (А или Б)`);
+                    } else {
+                        addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+                    }
                 } else { currentStep++; startFinalBattle(); }
             }
             answerInput.value = ""; return;
@@ -257,11 +338,22 @@
             if (currentStep + 1 < stages.length) {
                 currentStep++; subPhase = "theory"; const nextStage = stages[currentStep]; changeBackground(nextStage.heroKey);
                 addLogLine(`\n>>> РАЗРЫВ: УРОВЕНЬ ${nextStage.hero} <<<`, false, false, true);
-                addLogLine(nextStage.theoryText); addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+                addLogLine(nextStage.theoryText);
+                if (nextStage.media && nextStage.media.length > 0) {
+                    subPhase = "visual";
+                    waitingForVisualAnswer = true;
+                    currentVisualPayload = nextStage;
+                    renderVisual(nextStage);
+                    addLogLine(`\n${nextStage.visualPrompt}`, true);
+                    addLogLine(`> ВВЕДИ БУКВУ (А или Б)`);
+                } else {
+                    addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+                }
             } else { currentStep++; startFinalBattle(); }
-        } else { addLogLine(`❌ Ошибка. Попробуй ещё раз.`, false); triggerGlitchAttack(); }
+        } else { addLogLine(`❌ Ошибка. Попробуй ещё раз.`, false); }
         answerInput.value = "";
     }
+    
     function processVisualAnswer(answer) {
         const expected = currentVisualPayload.visualAnswerKey;
         if (answer.toUpperCase() === expected) {
@@ -271,11 +363,22 @@
                 currentStep++; subPhase = "theory"; waitingForVisualAnswer = false; visualBlock.classList.add("hidden");
                 const nextStage = stages[currentStep]; changeBackground(nextStage.heroKey);
                 addLogLine(`\n>>> РАЗРЫВ: УРОВЕНЬ ${nextStage.hero} <<<`, false, false, true);
-                addLogLine(nextStage.theoryText); addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+                addLogLine(nextStage.theoryText);
+                if (nextStage.media && nextStage.media.length > 0) {
+                    subPhase = "visual";
+                    waitingForVisualAnswer = true;
+                    currentVisualPayload = nextStage;
+                    renderVisual(nextStage);
+                    addLogLine(`\n${nextStage.visualPrompt}`, true);
+                    addLogLine(`> ВВЕДИ БУКВУ (А или Б)`);
+                } else {
+                    addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+                }
             } else if (!currentVisualPayload.hero) { finishGame(); } else { currentStep++; startFinalBattle(); }
-        } else { addLogLine(`❌ Неправильно. Попробуй ещё раз.`, false); triggerGlitchAttack(); }
+        } else { addLogLine(`❌ Неправильно. Попробуй ещё раз.`, false); }
         answerInput.value = "";
     }
+    
     function onSubmit() {
         if (gameState !== "playing") return;
         let rawAnswer = answerInput.value.trim();
@@ -284,31 +387,40 @@
         else if (subPhase === "visual" && waitingForVisualAnswer) processVisualAnswer(rawAnswer);
         answerInput.value = "";
     }
+    
     function startGame() {
         gameState = "playing"; currentStep = 0; subPhase = "theory"; waitingForVisualAnswer = false; council = []; updateCouncilUI();
-        visualBlock.classList.add("hidden"); if (keeperGlitch) keeperGlitch.style.display = 'none';
+        visualBlock.classList.add("hidden");
+        prologBg.classList.add('hidden');
         changeBackground('duh'); spiritBg.classList.add('visible');
         inputArea.classList.remove("hidden"); answerInput.disabled = false; submitBtn.disabled = false; answerInput.value = "";
         const first = stages[0];
         addLogLine(`\n>>> ПРОЛОГ ЗАВЕРШЁН. НАЧАЛО МИССИИ <<<`, false, true);
         addLogLine(`>>> РАЗРЫВ: УРОВЕНЬ ${first.hero} <<<`, false, false, true);
         addLogLine(first.theoryText);
-        if (first.theoryIsInfo && first.media && first.media.length > 0) {
-            setTimeout(() => {
-                subPhase = "visual"; waitingForVisualAnswer = true; currentVisualPayload = first; renderVisual(first);
-                addLogLine(`\n${first.visualPrompt}`, true); addLogLine(`> ВВЕДИ БУКВУ (А или Б)`);
-            }, 500);
-        } else { addLogLine(`\n> ВВЕДИ ОТВЕТ:`); }
+        if (first.media && first.media.length > 0) {
+            subPhase = "visual";
+            waitingForVisualAnswer = true;
+            currentVisualPayload = first;
+            renderVisual(first);
+            addLogLine(`\n${first.visualPrompt}`, true);
+            addLogLine(`> ВВЕДИ БУКВУ (А или Б)`);
+        } else {
+            addLogLine(`\n> ВВЕДИ ОТВЕТ:`);
+        }
         answerInput.focus();
     }
+    
     function showProlog() {
         gameState = "prolog";
+        prologBg.classList.remove('hidden');
         prologLines.forEach(line => addLogLine(line, line.includes("ГОТОВ?")));
         const startBtnContainer = document.createElement('div'); startBtnContainer.style.display = 'flex'; startBtnContainer.style.justifyContent = 'center'; startBtnContainer.style.marginTop = '15px';
         const startBtn = document.createElement('button'); startBtn.innerText = '🚀 НАЧАТЬ МИССИЮ'; startBtn.className = 'start-btn';
         startBtn.onclick = () => { startBtnContainer.remove(); startGame(); };
         startBtnContainer.appendChild(startBtn); logDiv.appendChild(startBtnContainer);
     }
+    
     submitBtn.addEventListener('click', onSubmit);
     answerInput.addEventListener('keypress', e => { if (e.key === 'Enter') onSubmit(); });
     showProlog();
